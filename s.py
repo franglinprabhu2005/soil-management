@@ -26,7 +26,8 @@ def load_pdf_text(pdf_path):
     return text
 
 # Define the PDF path (update this if needed)
-pdf_path = "https://github.com/franglinprabhu2005/soil-management/blob/271e0cff6fb63a4c293771c547e867c2ce2b367e/mk.pdf"
+pdf_path = "data/mk.pdf"
+
 
 # Check if file exists
 if not os.path.exists(pdf_path):
