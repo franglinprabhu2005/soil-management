@@ -1,53 +1,43 @@
 import streamlit as st
+import google.generativeai as genai
+import requests
+from io import BytesIO
+import pdfplumber
 
-# ✅ THIS MUST BE FIRST Streamlit command
 st.set_page_config(page_title="Farmer Chatbot", layout="wide")
 
-import google.generativeai as genai
-from PyPDF2 import PdfReader
-import os
-
-# Get API key from Streamlit secrets
-api_key = "AIzaSyBoGkf3vaZuMWmegTLM8lmVpvvoSOFYLYU"
+api_key = "YOUR_API_KEY"
 genai.configure(api_key=api_key)
 
-# Load Gemini model
 model = genai.GenerativeModel("gemini-2.0-flash")
 
-# Read content from the PDF file
 @st.cache_data
-def load_pdf_text(pdf_path):
-    reader = PdfReader(pdf_path)
+def load_pdf_text_from_url(pdf_url):
+    response = requests.get(pdf_url)
+    response.raise_for_status()
+    pdf_file = BytesIO(response.content)
     text = ""
-    for page in reader.pages:
-        page_text = page.extract_text()
-        if page_text:
-            text += page_text
+    with pdfplumber.open(pdf_file) as pdf:
+        for page in pdf.pages:
+            text += page.extract_text() or ""
     return text
 
-# Define the PDF path (update this if needed)
-pdf_path = "https://github.com/franglinprabhu2005/soil-management/commit/271e0cff6fb63a4c293771c547e867c2ce2b367e"
+pdf_url = "https://raw.githubusercontent.com/franglinprabhu2005/soil-management/main/mk.pdf"
 
-
-# Check if file exists
-if not os.path.exists(pdf_path):
-    st.error("⚠️ PDF file not found. Please check the file path.")
+try:
+    knowledge_base = load_pdf_text_from_url(pdf_url)
+except Exception as e:
+    st.error(f"⚠️ Unable to load PDF: {e}")
     st.stop()
 
-# Load content from PDF
-knowledge_base = load_pdf_text(pdf_path)
-
-# UI
 st.title("👨‍🌾 Farmer Assistant Chatbot")
 st.markdown("""
 This chatbot helps farmers understand soil types, usage, and best crops to grow.  
 இந்த chatbot உங்களுக்கு மண்ணின் வகைகள் மற்றும் ஏற்ற பயிர்கள் பற்றி விளக்கம் தரும்.
 """)
 
-# User input
 user_input = st.text_input("📥 Type your question here:", "What crops are best for black soil?")
 
-# Ask Gemini when button clicked
 if st.button("Ask the Bot"):
     with st.spinner("Thinking like a farmer... 🌾"):
         prompt = f"Use the following soil data to answer the user's question:\n\n{knowledge_base}\n\nQuestion: {user_input}"
@@ -55,6 +45,5 @@ if st.button("Ask the Bot"):
         st.success("Here’s the answer:")
         st.write(response.text)
 
-# Footer
 st.markdown("---")
 st.caption("Developed by Mapula Franklin for helping Indian farmers 🇮🇳")
