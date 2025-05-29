@@ -26,7 +26,7 @@ def load_pdf_text(pdf_path):
     return text
 
 # Define the PDF path (update this if needed)
-pdf_path = "data/mk.pdf"
+pdf_path = "s/mk.pdf"
 
 
 # Check if file exists
